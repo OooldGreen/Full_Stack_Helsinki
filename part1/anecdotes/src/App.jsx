@@ -14,6 +14,7 @@ const Anecdote = ({anecdotes, vote, selected}) => (
   </div> 
 )
 
+
 function App() {
   const anecdotes = [
     'If it hurts, do it more often.',
