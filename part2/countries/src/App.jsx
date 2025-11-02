@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 // import './App.css'
 import countriesService from './services/countries'
 import Country from './components/Country'
+import CountryList from './components/CountryList'
 
 function App() {
   const [text, setText] = useState('')
@@ -33,37 +34,41 @@ function App() {
     }
   }, [selectedCountry])
 
+  // 当只有1个国家时，修改state
+  useEffect(() => {
+    if(countries.length === 1) {
+      setSelectedCountry(countries[0])
+    }
+  }, [countries])
+
   const showDetail = (country) => {
     // console.log('show', country)
     setSelectedCountry(country)
-    return <Country country={country} weather={weather}></Country>
   }
 
   const renderCountries = () => {
     if(countries.length >= 10 && text) {
       return <p>Too many matches, specify another filter</p>
     } else if(countries.length > 1) {
-      return (countries.map(country => 
-        <div key={country.area}>
-          {country.name.common} 
-          <button onClick={() => showDetail(country)}>show</button>
-        </div>
-      ))
+      return <CountryList countries={countries} showDetail={showDetail}></CountryList>
     } else if(countries.length === 1) {
-      if(!selectedCountry) setSelectedCountry(countries[0])
-      // return weather && <Country country={countries[0]} weather={weather}></Country>
+      return null
     }
   }
 
   const handleChange = (event) => {
     setText(event.target.value)
     setSelectedCountry(null)
+    setWeather(null)
   }
 
   return (
     <>
-      <div>find countries  
-         <input value={text} onChange={handleChange}/>
+      <div>
+         <p>
+          Find countries
+          <input value={text} onChange={handleChange}/>
+        </p>
          {renderCountries()}
          {selectedCountry && weather && <Country country={selectedCountry} weather={weather}></Country>}
       </div>
