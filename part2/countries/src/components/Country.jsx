@@ -1,5 +1,5 @@
 const Country = ({country, weather}) => {
-    // console.log(weather)
+    // console.log(country)
     return (
         <>
           <h1>{country.name.common}</h1>
@@ -13,6 +13,8 @@ const Country = ({country, weather}) => {
               <li key={index}>{language}</li>
             ))}
           </ul>
+
+          <p style={{fontSize: '6rem', lineHeight: 0.1}}>{country.flag}</p>
 
           <h2>Weather in {country.capital}</h2>
           <p>Temperature {weather.main.temp}  Celsius</p>
