@@ -1,16 +1,18 @@
 import { useState, useEffect } from 'react'
-// import './App.css'
+import personService from './services/persons'
+import './App.css'
 import PersonForm from './components/PersonForm'
 import Filter from './components/Filter'
 import Persons from './components/Persons'
-// import axios from 'axios'
-import personService from './services/persons'
+import Notification from './components/Notification'
 
 function App() {
   const [persons,setPersons] = useState([])
   const [newName, setNewName] = useState('')
   const [newNum, setNewNum] = useState('')
   const [filtBy, setFilter] = useState('')
+  const [hint, setHint] = useState(null)
+  const [error, setError] = useState(null)
 
   useEffect(() => {
     personService.getAll().then(initialPersons => {
@@ -34,7 +36,13 @@ function App() {
           setNewName('')
           setNewNum('')
         }).catch(err => {
-          alert('update failed.')
+          // alert('update failed.')
+          setError(`Information of ${newName} has already been removed from server`)
+          setTimeout(() => {
+            setError(null)
+          }, 5000)
+          setNewName('')
+          setNewNum('')
         })
       }
       // alert(`${newName} is already added to phonebook`)
@@ -45,6 +53,10 @@ function App() {
         setPersons(persons.concat(newPerson))
         setNewName('')
         setNewNum('')
+        setHint(`Added ${newObj.name}`)
+        setTimeout(() => {
+          setHint(null)
+        }, 5000)
       }).catch(err => {
         alert('add failed')
       })
@@ -82,6 +94,8 @@ function App() {
   return (
     <>
      <h2>Phonebook</h2>
+     <Notification message={hint} className='hint'></Notification>
+     <Notification message={error} className='error'></Notification>
      <Filter value={filtBy} onChange={handleFilter}/>
 
      <h2>Add a new</h2>
