@@ -47,19 +47,27 @@ function App() {
       }
       // alert(`${newName} is already added to phonebook`)
     } else {
-      const newObj = { name: newName, number: newNum, id: (persons.length+1).toString()}
+      const newObj = { name: newName, number: newNum }
 
-      personService.create(newObj).then(newPerson => {
-        setPersons(persons.concat(newPerson))
-        setNewName('')
-        setNewNum('')
-        setHint(`Added ${newObj.name}`)
-        setTimeout(() => {
-          setHint(null)
-        }, 5000)
-      }).catch(err => {
-        alert('add failed')
-      })
+      personService
+        .create(newObj)
+        .then(newPerson => {
+          setPersons(persons.concat(newPerson))
+          setNewName('')
+          setNewNum('')
+          setHint(`Added ${newObj.name}`)
+          setTimeout(() => {
+            setHint(null)
+          }, 5000)
+        })
+        .catch(err => {
+          // alert('add failed')
+          // console.log(err.response.data.error)
+          setError(err.response.data.error.toString())
+          setTimeout(() => {
+            setError(null)
+          }, 5000)
+        })
     }
   }
 
