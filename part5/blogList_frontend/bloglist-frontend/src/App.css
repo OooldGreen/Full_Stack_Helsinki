@@ -15,3 +15,15 @@
   border-radius: 5px;
   padding: 10px; 
 }
+
+.button {
+  border-color: beige;
+  border-radius: 5px;
+  padding: 5px;
+  margin-left: 5px;
+  margin-bottom: 5px;
+}
+
+.button:hover {
+  background-color: rgb(89, 142, 248);
+}

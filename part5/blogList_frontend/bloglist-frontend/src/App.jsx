@@ -1,7 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
+import './App.css'
+
 import LoginForm from './components/LoginForm'
 import BlogForm from './components/BlogForm'
+import NewBlogForm from './components/NewBlogForm'
+import Togglable from './components/Togglable'
 import Notification from './components/Notification'
+
 import blogService from './services/blogs'
 import loginService from './services/login'
 
@@ -9,10 +14,12 @@ const App = () => {
   const [blogs, setBlogs] = useState([])
   const [errorMessage, setErrorMessage] = useState(null)
   const [hint, setHint] = useState(null)
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
   const [user, setUser] = useState(null)
-  const [newBlog, setNewBlog] = useState({ title: '', author: '', url: '' })
+  // 显示或隐藏创建新博客表单
+  const createBlogFormRef = useRef()
+
+  // 按照 likes 数量进行排序
+  const sortedBlogs = [...blogs].sort((a, b) => b.likes - a.likes)
 
   useEffect(() => {
     if(user) {
@@ -23,25 +30,21 @@ const App = () => {
   }, [user])
 
   useEffect(() => {
-     const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
-     if(loggedUserJSON) {
+    const loggedUserJSON = window.localStorage.getItem('loggedBlogAppUser')
+    if(loggedUserJSON) {
       const user = JSON.parse(loggedUserJSON)
       setUser(user)
       blogService.setToken(user.token)
-     }
+    }
   }, [])
 
-  const handleLogin = async event => {
-    event.preventDefault()
-
+  const handleLogin = async ({ username, password }) => {
     try {
       const user = await loginService.login({ username, password })
       // 用户登录状态储存
       window.localStorage.setItem('loggedBlogAppUser', JSON.stringify(user))
       blogService.setToken(user.token)
       setUser(user)
-      setUsername('')
-      setPassword('')
     } catch {
       setErrorMessage('Wrong username or password')
       setTimeout(() => {
@@ -56,31 +59,13 @@ const App = () => {
     setUser(null)
   }
 
-  const handleUsernameChange = (event) => {
-    setUsername(event.target.value)
-  }
-
-  const handlePasswordChange = (event) => {
-    setPassword(event.target.value)
-  }
-
-  const handleInputChange = (event) => {
-    const {name, value} = event.target
-    // 更新 newBlog， 把新博客包装成一个对象
-    setNewBlog({ ...newBlog, [name]: value })
-  }
-
-  const handleCreateBlog = async event => {
-    event.preventDefault()
-
+  const addNewBlog = async (blogObject) => {
     try {
-      const returnedNewBlog = await blogService.create(newBlog)
+      createBlogFormRef.current.toggleVisibility()
+      const returnedNewBlog = await blogService.create(blogObject)
       setBlogs(blogs.concat(returnedNewBlog))
       setHint(`a new blog ${returnedNewBlog.title} by ${returnedNewBlog.author} added`)
-      
-      setTimeout(() => {
-        setNewBlog({ title: '', author: '', url: ''})
-      }, 50)
+
       setTimeout(() => {
         setHint(null)
       }, 5000)
@@ -92,17 +77,47 @@ const App = () => {
     }
   }
 
+  const addLike = async (blogObj) => {
+    const updatedBlog = {
+      ...blogObj,
+      likes: blogObj.likes + 1,
+      user: blogObj.user.id || blogObj.user
+    }
+
+    try {
+      const retunedBlog = await blogService.updateLike(blogObj.id, updatedBlog)
+      setBlogs(blogs.map(blog => (
+        blog.id === blogObj.id ? retunedBlog : blog
+      )))
+    } catch {
+      setErrorMessage('Failed to update likes')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
+  }
+
+  const deleteBlog = async (id) => {
+    try {
+      await blogService.deleteBlog(id)
+      setBlogs(blogs.filter(blog => blog.id !== id))
+      setHint('blog remove success.')
+      setTimeout(() => {
+        setHint(null)
+      }, 5000)
+    } catch {
+      setErrorMessage('Failed to remove blog')
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 5000)
+    }
+  }
+
   if (user === null) {
     return (
       <div>
         <h2>Log in to application</h2>
-        <LoginForm 
-          username={username}
-          password={password}
-          handleLogin={handleLogin}
-          handleUsernameChange={handleUsernameChange}
-          handlePasswordChange={handlePasswordChange}>
-        </LoginForm>
+        <LoginForm login={handleLogin}></LoginForm>
       </div>
     )
   }
@@ -111,14 +126,17 @@ const App = () => {
     <div>
       <Notification message={errorMessage} className='error'></Notification>
       <Notification message={hint} className='hint'></Notification>
-      <BlogForm 
-        blogs={blogs} 
-        username={user.name} 
-        handleLogout={handleLogout}
-        newBlog={newBlog}
-        handleInputChange={handleInputChange}
-        handleCreateBlog={handleCreateBlog}
-      ></BlogForm>
+
+      <h2>Blogs</h2>
+      <p>
+        {user.name} logged in
+        <button type="submit" className="button" onClick={handleLogout}>logout</button>
+      </p>
+      {/* create a new blog */}
+      <Togglable buttonLabel='create new blog' ref={createBlogFormRef}>
+        <NewBlogForm createdBlog={addNewBlog}></NewBlogForm>
+      </Togglable>
+      <BlogForm blogs={sortedBlogs} addLike={addLike} deleteBlog={deleteBlog}></BlogForm>
     </div>
   )
 }

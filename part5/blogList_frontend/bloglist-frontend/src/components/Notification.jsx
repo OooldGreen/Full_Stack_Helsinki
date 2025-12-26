@@ -1,13 +1,13 @@
 import '../App.css'
 
 const Notification = ({ message, className }) => {
-    if(message === null) {
-        return null
-    }
+  if(message === null) {
+    return null
+  }
 
-    return (
-        <div className={className}>{message}</div>
-    )
+  return (
+    <div className={className}>{message}</div>
+  )
 }
 
 export default Notification
